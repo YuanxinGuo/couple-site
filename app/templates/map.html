@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}足迹地图{% endblock %}
+{% block content %}
+
+<h1 class="text-3xl font-bold mb-6">足迹地图</h1>
+
+<div id="map" class="w-full h-[60vh] rounded-2xl shadow-sm mb-8"></div>
+
+{% if trips %}
+<div class="space-y-4">
+  {% for trip in trips %}
+  <div class="bg-white/60 rounded-xl p-5 shadow-sm flex items-start gap-4">
+    <div class="w-10 h-10 rounded-full bg-rose/10 flex items-center justify-center text-rose flex-shrink-0">📍</div>
+    <div class="flex-1">
+      <div class="flex items-center justify-between mb-1">
+        <h3 class="font-bold text-lg">{{ trip.place }}</h3>
+        <span class="text-ink/40 text-sm">{{ trip.visited_at.strftime('%Y.%m.%d') }}</span>
+      </div>
+      {% if trip.story %}
+      <p class="text-ink/60 text-sm">{{ trip.story }}</p>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-16 text-ink/40">
+  <p class="text-5xl mb-4">🌍</p>
+  <p>还没有添加足迹</p>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+var map = L.map('map').setView([35.86, 104.19], 4);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; OpenStreetMap',
+  maxZoom: 18,
+}).addTo(map);
+
+var markers = [];
+{% for trip in trips %}
+var m = L.marker([{{ trip.latitude }}, {{ trip.longitude }}])
+  .addTo(map)
+  .bindPopup('<b>{{ trip.place }}</b><br>{{ trip.visited_at.strftime("%Y.%m.%d") }}{% if trip.story %}<br><small>{{ trip.story }}</small>{% endif %}');
+markers.push(m);
+{% endfor %}
+
+if (markers.length > 0) {
+  var group = new L.featureGroup(markers);
+  map.fitBounds(group.getBounds().pad(0.1));
+}
+</script>
+{% endblock %}

@@ -1,0 +1,15 @@
+<nav class="sticky top-0 z-50 bg-cream/80 backdrop-blur-md border-b border-sand/50">
+  <div class="max-w-5xl mx-auto px-4 flex items-center justify-between h-14">
+    <a href="/" class="text-lg font-bold tracking-wide">{{ site_title }}</a>
+    <div class="flex items-center gap-6 text-sm">
+      <a href="/gallery" class="hover:text-rose transition-colors">照片</a>
+      <a href="/timeline" class="hover:text-rose transition-colors">纪念日</a>
+      <a href="/map" class="hover:text-rose transition-colors">足迹</a>
+      <a href="/diary" class="hover:text-rose transition-colors">日记</a>
+      {% if request.session.get("is_admin") %}
+      <a href="/admin" class="text-rose font-medium">管理</a>
+      {% endif %}
+      <a href="/logout" class="text-ink/40 hover:text-rose transition-colors text-xs">退出</a>
+    </div>
+  </div>
+</nav>

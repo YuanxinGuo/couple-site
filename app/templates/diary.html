@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}小日记{% endblock %}
+{% block content %}
+
+<h1 class="text-3xl font-bold mb-8">小日记</h1>
+
+{% if entries %}
+<div class="space-y-6">
+  {% for entry in entries %}
+  <div class="bg-white/60 rounded-2xl p-6 shadow-sm">
+    <div class="flex items-center justify-between mb-3">
+      <div class="flex items-center gap-3">
+        <span class="text-2xl">
+          {% if entry.mood == 'happy' %}😊
+          {% elif entry.mood == 'love' %}🥰
+          {% elif entry.mood == 'excited' %}🎉
+          {% elif entry.mood == 'grateful' %}🙏
+          {% elif entry.mood == 'sad' %}😢
+          {% elif entry.mood == 'tired' %}😴
+          {% else %}💭{% endif %}
+        </span>
+        {% if entry.title %}
+        <h3 class="font-bold text-lg">{{ entry.title }}</h3>
+        {% endif %}
+      </div>
+      <span class="text-ink/30 text-sm">{{ entry.created_at.strftime('%Y年%m月%d日 %H:%M') }}</span>
+    </div>
+    <p class="text-ink/70 leading-relaxed whitespace-pre-wrap">{{ entry.content }}</p>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-20 text-ink/40">
+  <p class="text-5xl mb-4">📝</p>
+  <p>还没有日记，记录下此刻的心情吧</p>
+</div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}纪念日{% endblock %}
+{% block content %}
+
+<h1 class="text-3xl font-bold mb-8">纪念日</h1>
+
+{% if anniversaries %}
+<div class="space-y-4">
+  {% for anniv in anniversaries %}
+  <div class="bg-white/60 rounded-2xl p-6 shadow-sm flex items-start gap-5">
+    <div class="text-4xl flex-shrink-0">{{ anniv.icon }}</div>
+    <div class="flex-1">
+      <div class="flex items-center justify-between mb-1">
+        <h3 class="text-xl font-bold">{{ anniv.title }}</h3>
+        <span class="text-ink/40 text-sm">{{ anniv.date.strftime('%Y年%m月%d日') }}</span>
+      </div>
+      {% if anniv.description %}
+      <p class="text-ink/60 text-sm mb-3">{{ anniv.description }}</p>
+      {% endif %}
+      <div class="flex items-center text-rose font-medium text-sm"
+           data-countdown="{{ anniv.date }}"
+           data-recurring="{{ 'true' if anniv.recurring else 'false' }}">
+        <span class="animate-pulse mr-1">⏳</span>
+        <span class="countdown-text">计算中...</span>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-20 text-ink/40">
+  <p class="text-5xl mb-4">💝</p>
+  <p>还没有添加纪念日</p>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll('[data-countdown]').forEach(function(el) {
+  var annivDate = new Date(el.dataset.countdown + 'T00:00:00');
+  var recurring = el.dataset.recurring === 'true';
+  function update() {
+    var now = new Date();
+    var target = new Date(annivDate);
+    if (recurring) {
+      target.setFullYear(now.getFullYear());
+      if (target < now) target.setFullYear(now.getFullYear() + 1);
+    }
+    var diff = target - now;
+    if (diff < 0) {
+      el.querySelector('.countdown-text').textContent = '已过去';
+      return;
+    }
+    var days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    var hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    var mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    if (days > 0) {
+      el.querySelector('.countdown-text').textContent = '还有 ' + days + ' 天 ' + hours + ' 小时';
+    } else if (hours > 0) {
+      el.querySelector('.countdown-text').textContent = '还有 ' + hours + ' 小时 ' + mins + ' 分钟';
+    } else {
+      el.querySelector('.countdown-text').textContent = '还有 ' + mins + ' 分钟';
+    }
+  }
+  update();
+  setInterval(update, 60000);
+});
+</script>
+{% endblock %}

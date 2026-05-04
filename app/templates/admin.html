@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% block title %}后台管理{% endblock %}
+{% block content %}
+
+<h1 class="text-3xl font-bold mb-8">后台管理</h1>
+
+<!-- 上传照片 -->
+<section class="mb-12 bg-white/60 rounded-2xl p-6 shadow-sm">
+  <h2 class="text-xl font-bold mb-4">上传照片</h2>
+  <form action="/api/photos/upload" method="post" enctype="multipart/form-data" class="space-y-4">
+    <div>
+      <label class="block text-sm text-ink/60 mb-1">选择图片</label>
+      <input type="file" name="file" accept="image/*" required
+             class="w-full px-4 py-3 rounded-xl bg-white border border-sand focus:border-rose outline-none">
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm text-ink/60 mb-1">标题</label>
+        <input type="text" name="caption" placeholder="给这张照片起个标题"
+               class="w-full px-4 py-3 rounded-xl bg-white border border-sand focus:border-rose outline-none">
+      </div>
+      <div>
+        <label class="block text-sm text-ink/60 mb-1">拍摄地点</label>
+        <input type="text" name="location" placeholder="北京·故宫"
+               class="w-full px-4 py-3 rounded-xl bg-white border border-sand focus:border-rose outline-none">
+      </div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm text-ink/60 mb-1">拍摄日期</label>
+        <input type="date" name="taken_at"
+               class="w-full px-4 py-3 rounded-xl bg-white border border-sand focus:border-rose outline-none">
+      </div>
+      <div>
+        <label class="block text-sm text-ink/60 mb-1">标签（逗号分隔）</label>
+        <input type="text" name="tags" placeholder="旅行,日常,自拍"
+               class="w-full px-4 py-3 rounded-xl bg-white border border-sand focus:border-rose outline-none">
+      </div>
+    </div>
+    <button type="submit" class="px-8 py-3 rounded-xl bg-ink text-cream font-medium hover:bg-ink/90 transition-colors">
+      上传
+    </button>
+  </form>
+</section>
+
+<!-- 已上传照片 -->
+<section class="mb-12 bg-white/60 rounded-2xl p-6 shadow-sm">
+  <h2 class="text-xl font-bold mb-4">已上传照片 ({{ photos|length }})</h2>
+  {% if photos %}
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+    {% for photo in photos %}
+    <div class="relative group rounded-lg overflow-hidden">
+      <img src="{{ photo.thumb_url }}" alt="{{ photo.caption }}" class="w-full h-32 object-cover">
+      <button onclick="deletePhoto({{ photo.id }}, this)"
+              class="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+        ✕
+      </button>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="text-ink/40 text-sm">暂无照片</p>
+  {% endif %}
+</section>
+
+<!-- 管理纪念日 -->
+<section class="mb-12 bg-white/60 rounded-2xl p-6 shadow-sm">
+  <h2 class="text-xl font-bold mb-4">添加纪念日</h2>
+  <form action="/api/anniversaries" method="post" class="space-y-4">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div>
+        <label class="block text-sm text-ink/60 mb-1">名称</label>
+        <input type="text" name="title" required placeholder="第一次见面"
+               class="w-full px-4 py-3 rounded-xl bg-white border border-sand focus:border-rose outline-none">
+      </div>
+      <div>
+        <label class="block text-sm text-ink/60 mb-1">日期</label>
+        <input type="date" name="date_str" required
+               class="w-full px-4 py-3 rounded-xl bg-white border border-sand focus:border-rose outline-none">
+      </div>
+      <div>
+        <label class="block text-sm text-ink/60 mb-1">图标</label>
+        <input type="text" name="icon" value="❤️" placeholder="emoji"
+               class="w-full px-4 py-3 rounded-xl bg-white border border-sand focus:border-rose outline-none">
+      </div>
+    </div>
+    <div class="flex items-center gap-8">
+      <div class="flex-1">
+        <label class="block text-sm text-ink/60 mb-1">描述</label>
+        <input type="text" name="description" placeholder="简短描述"
+               class="w-full px-4 py-3 rounded-xl bg-white border border-sand focus:border-rose outline-none">
+      </div>
+      <label class="flex items-center gap-2 text-sm cursor-pointer pt-5">
+        <input type="checkbox" name="recurring" value="true" checked class="accent-rose"> 每年重复
+      </label>
+    </div>
+    <button type="submit" class="px-8 py-3 rounded-xl bg-ink text-cream font-medium hover:bg-ink/90 transition-colors">
+      添加
+    </button>
+  </form>
+</section>
+
+<!-- 管理足迹 -->
+<section class="mb-12 bg-white/60 rounded-2xl p-6 shadow-sm">
+  <h2 class="text-xl font-bold mb-4">添加足迹</h2>
+  <form action="/api/trips" method="post" class="space-y-4">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div>
+        <label class="block text-sm text-ink/60 mb-1">地点名</label>
+        <input type="text" name="place" required placeholder="北京·故宫"
+               class="w-full px-4 py-3 rounded-xl bg-white border border-sand focus:border-rose outline-none">
+      </div>
+      <div>
+        <label class="block text-sm text-ink/60 mb-1">纬度</label>
+        <input type="number" step="any" name="latitude" required placeholder="39.9042"
+               class="w-full px-4 py-3 rounded-xl bg-white border border-sand focus:border-rose outline-none">
+      </div>
+      <div>
+        <label class="block text-sm text-ink/60 mb-1">经度</label>
+        <input type="number" step="any" name="longitude" required placeholder="116.4074"
+               class="w-full px-4 py-3 rounded-xl bg-white border border-sand focus:border-rose outline-none">
+      </div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div>
+        <label class="block text-sm text-ink/60 mb-1">日期</label>
+        <input type="date" name="visited_at" required
+               class="w-full px-4 py-3 rounded-xl bg-white border border-sand focus:border-rose outline-none">
+      </div>
+      <div>
+        <label class="block text-sm text-ink/60 mb-1">故事</label>
+        <input type="text" name="story" placeholder="在这里发生了什么..."
+               class="w-full px-4 py-3 rounded-xl bg-white border border-sand focus:border-rose outline-none">
+      </div>
+    </div>
+    <button type="submit" class="px-8 py-3 rounded-xl bg-ink text-cream font-medium hover:bg-ink/90 transition-colors">
+      添加
+    </button>
+  </form>
+</section>
+
+<!-- 写日记 -->
+<section class="mb-12 bg-white/60 rounded-2xl p-6 shadow-sm">
+  <h2 class="text-xl font-bold mb-4">写日记</h2>
+  <form action="/api/diary" method="post" class="space-y-4">
+    <div class="flex gap-4">
+      <div class="flex-1">
+        <label class="block text-sm text-ink/60 mb-1">标题（可选）</label>
+        <input type="text" name="title" placeholder="今天的小确幸"
+               class="w-full px-4 py-3 rounded-xl bg-white border border-sand focus:border-rose outline-none">
+      </div>
+      <div>
+        <label class="block text-sm text-ink/60 mb-1">心情</label>
+        <select name="mood" class="px-4 py-3 rounded-xl bg-white border border-sand focus:border-rose outline-none">
+          <option value="happy">😊 开心</option>
+          <option value="love">🥰 爱</option>
+          <option value="excited">🎉 兴奋</option>
+          <option value="grateful">🙏 感恩</option>
+          <option value="sad">😢 难过</option>
+          <option value="tired">😴 疲惫</option>
+        </select>
+      </div>
+    </div>
+    <div>
+      <label class="block text-sm text-ink/60 mb-1">内容</label>
+      <textarea name="content" required rows="4" placeholder="写下今天想说的话..."
+                class="w-full px-4 py-3 rounded-xl bg-white border border-sand focus:border-rose outline-none resize-none"></textarea>
+    </div>
+    <button type="submit" class="px-8 py-3 rounded-xl bg-ink text-cream font-medium hover:bg-ink/90 transition-colors">
+      发布
+    </button>
+  </form>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function deletePhoto(id, btn) {
+  if (!confirm('确认删除这张照片？')) return;
+  var resp = await fetch('/api/photos/' + id, { method: 'DELETE' });
+  if (resp.ok) {
+    btn.closest('.relative').remove();
+  }
+}
+</script>
+{% endblock %}

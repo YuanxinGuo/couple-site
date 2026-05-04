@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{{ site_title }}{% endblock %}</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/photoswipe@5/dist/photoswipe.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
+
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', path='css/custom.css') }}">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'cream': '#FAF6F0',
+            'sand': '#E8DFD3',
+            'rose': '#D4807A',
+            'ink': '#2C2825',
+          },
+          fontFamily: {
+            'serif': ['"Noto Serif SC"', 'serif'],
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-cream text-ink font-serif min-h-screen flex flex-col">
+  {% include "components/nav.html" %}
+
+  <main class="max-w-5xl mx-auto px-4 py-8 flex-1 w-full">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="text-center text-sm text-ink/50 py-8">
+    made with ❤️ · since {{ relationship_start }}
+  </footer>
+
+  <script src="{{ url_for('static', path='js/app.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

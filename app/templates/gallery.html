@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}照片墙{% endblock %}
+{% block content %}
+
+<section class="mb-8" x-data="{ activeTag: '全部' }">
+  <h1 class="text-3xl font-bold mb-6">照片墙</h1>
+
+  {% if all_tags %}
+  <div class="flex flex-wrap gap-2 mb-6">
+    <button @click="activeTag = '全部'"
+            :class="activeTag === '全部' ? 'bg-ink text-cream' : 'bg-white text-ink/60 hover:text-ink'"
+            class="px-4 py-1.5 rounded-full text-sm transition-colors">
+      全部
+    </button>
+    {% for tag in all_tags %}
+    <button @click="activeTag = '{{ tag }}'"
+            :class="activeTag === '{{ tag }}' ? 'bg-ink text-cream' : 'bg-white text-ink/60 hover:text-ink'"
+            class="px-4 py-1.5 rounded-full text-sm transition-colors">
+      {{ tag }}
+    </button>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+    {% for photo in photos %}
+    <div class="photo-item" data-tags="{{ photo.tags|join(',') }}">
+      <div class="relative overflow-hidden rounded-xl group cursor-pointer"
+           @click="$dispatch('open-lightbox', {url: '{{ photo.url }}', caption: '{{ photo.caption }}'})">
+        <img src="{{ photo.thumb_url }}" alt="{{ photo.caption }}" loading="lazy"
+             class="w-full h-64 object-cover transition duration-300 group-hover:scale-105">
+        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/40 to-transparent p-3">
+          {% if photo.caption %}
+          <p class="text-white text-sm">{{ photo.caption }}</p>
+          {% endif %}
+          {% if photo.taken_at %}
+          <p class="text-white/70 text-xs">{{ photo.taken_at.strftime('%Y.%m.%d') }}</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+    {% if not photos %}
+    <div class="col-span-full text-center py-20 text-ink/40">
+      <p class="text-5xl mb-4">📷</p>
+      <p>还没有照片，快去上传第一张回忆吧</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Lightbox -->
+  <div x-data="{ open: false, url: '', caption: '' }"
+       @open-lightbox.window="open = true; url = $event.detail.url; caption = $event.detail.caption"
+       x-show="open"
+       x-transition
+       class="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center"
+       @click.self="open = false">
+    <button @click="open = false"
+            class="absolute top-4 right-4 text-white/70 hover:text-white text-3xl leading-none z-10">&times;</button>
+    <img :src="url" :alt="caption" class="max-w-[95vw] max-h-[90vh] object-contain rounded-lg shadow-2xl">
+    <p x-show="caption" x-text="caption" class="absolute bottom-6 text-white/80 text-sm"></p>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('alpine:init', () => {
+  document.querySelectorAll('.photo-item').forEach(item => {
+    item._tags = item.dataset.tags ? item.dataset.tags.split(',') : [];
+  });
+});
+
+document.addEventListener('click', (e) => {
+  if (e.target.matches('[x-text*="tag"]') || e.target.closest('[x-data] button')) {
+    setTimeout(() => {
+      const activeEl = document.querySelector('[x-data]');
+      if (!activeEl || !activeEl.__x) return;
+      const activeTag = activeEl.__x.$data.activeTag;
+      document.querySelectorAll('.photo-item').forEach(item => {
+        if (activeTag === '全部') {
+          item.style.display = '';
+        } else {
+          item.style.display = item._tags.includes(activeTag) ? '' : 'none';
+        }
+      });
+    }, 50);
+  }
+});
+</script>
+{% endblock %}

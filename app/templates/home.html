@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block content %}
+
+<section class="text-center py-12">
+  <p class="text-ink/50 text-lg mb-2">{{ relationship_start }} 至今</p>
+  <h1 class="text-4xl md:text-6xl font-bold mb-8 leading-tight">{{ site_title }}</h1>
+  <div class="inline-block bg-white/60 backdrop-blur rounded-2xl px-8 py-6 shadow-sm">
+    <p class="text-ink/50 text-sm mb-1">我们已经在一起</p>
+    <p class="text-rose font-bold">
+      <span class="text-5xl md:text-6xl font-serif" id="days-count">{{ days_together }}</span>
+      <span class="text-xl ml-2">天</span>
+    </p>
+    <p class="text-ink/40 text-sm mt-2" id="seconds-live">每秒都在更爱你</p>
+  </div>
+</section>
+
+{% if recent_photos %}
+<section class="mb-12">
+  <h2 class="text-2xl mb-6 border-b border-sand pb-2">最近的回忆</h2>
+  <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+    {% for photo in recent_photos %}
+    <a href="/gallery" class="block overflow-hidden rounded-xl group">
+      <img src="{{ photo.thumb_url }}" alt="{{ photo.caption }}" loading="lazy"
+           class="w-full h-64 object-cover transition duration-300 group-hover:scale-105">
+      {% if photo.caption %}
+      <div class="mt-2 text-sm text-ink/60 truncate">{{ photo.caption }}</div>
+      {% endif %}
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if anniversaries %}
+<section class="mb-12">
+  <h2 class="text-2xl mb-6 border-b border-sand pb-2">即将到来</h2>
+  <div class="space-y-3">
+    {% for anniv in anniversaries %}
+    <div class="flex items-center bg-white/50 rounded-xl p-5 shadow-sm">
+      <span class="text-3xl mr-4">{{ anniv.icon }}</span>
+      <div class="flex-1">
+        <div class="font-bold text-lg">{{ anniv.title }}</div>
+        <div class="text-sm text-ink/60">{{ anniv.date.strftime('%m月%d日') }}</div>
+      </div>
+      <div class="text-rose font-medium text-sm" id="countdown-{{ anniv.id }}"
+           data-date="{{ anniv.date }}"></div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+  var startDate = new Date('{{ relationship_start }}T00:00:00');
+  setInterval(function() {
+    var now = new Date();
+    var diffDays = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
+    document.getElementById('days-count').textContent = diffDays;
+  }, 60000);
+
+  document.querySelectorAll('[data-date]').forEach(function(el) {
+    var annivDate = new Date(el.dataset.date + 'T00:00:00');
+    var now = new Date();
+    annivDate.setFullYear(now.getFullYear());
+    if (annivDate < now) annivDate.setFullYear(now.getFullYear() + 1);
+    var diffDays = Math.ceil((annivDate - now) / (1000 * 60 * 60 * 24));
+    el.textContent = diffDays === 1 ? '就是明天！' : '还有 ' + diffDays + ' 天';
+  });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,18 @@
+<div class="relative overflow-hidden rounded-xl group cursor-pointer"
+     x-data="{ loaded: false }"
+     @click="$dispatch('open-lightbox', {url: '{{ photo.url }}', caption: '{{ photo.caption }}'})">
+  <img src="{{ photo.thumb_url }}"
+       alt="{{ photo.caption }}"
+       loading="lazy"
+       :class="loaded ? 'opacity-100' : 'opacity-0'"
+       @load="loaded = true"
+       class="w-full h-64 object-cover transition duration-300 group-hover:scale-105">
+  <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/40 to-transparent p-3">
+    {% if photo.caption %}
+    <p class="text-white text-sm">{{ photo.caption }}</p>
+    {% endif %}
+    {% if photo.taken_at %}
+    <p class="text-white/70 text-xs">{{ photo.taken_at.strftime('%Y.%m.%d') }}</p>
+    {% endif %}
+  </div>
+</div>

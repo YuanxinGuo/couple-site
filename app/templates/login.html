@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}登录{% endblock %}
+{% block content %}
+<div class="min-h-[70vh] flex flex-col items-center justify-center">
+  <div class="w-full max-w-sm">
+    <div class="text-center mb-10">
+      <h1 class="text-4xl font-bold mb-2">{{ site_title }}</h1>
+      <p class="text-ink/50">两个人的秘密花园</p>
+    </div>
+
+    <form method="post" action="/login" class="space-y-6">
+      <div>
+        <label class="block text-sm text-ink/60 mb-2">请输入暗号</label>
+        <input type="password" name="password" autofocus required
+               class="w-full px-4 py-3 rounded-xl bg-white border border-sand focus:border-rose focus:ring-1 focus:ring-rose outline-none transition-colors text-center text-lg tracking-widest"
+               placeholder="••••••••">
+        {% if error %}
+        <p class="text-rose text-sm text-center mt-3">{{ error }}</p>
+        {% endif %}
+      </div>
+      <button type="submit"
+              class="w-full py-3 rounded-xl bg-ink text-cream font-medium hover:bg-ink/90 transition-colors">
+        进入小窝
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}
