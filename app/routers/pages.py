@@ -1,4 +1,5 @@
 from datetime import date
+import json
 from fastapi import APIRouter, Request, Depends
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse
@@ -11,6 +12,7 @@ from app.dependencies import require_auth
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
+templates.env.filters["tojson"] = lambda v: json.dumps(v, ensure_ascii=False, default=str)
 
 
 def _ctx(request: Request, **extra):
