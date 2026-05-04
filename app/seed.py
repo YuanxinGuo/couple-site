@@ -28,15 +28,15 @@ def seed(db: Session, relationship_start: date):
                 place="武汉",
                 latitude=30.5928,
                 longitude=114.3055,
-                visited_at=date(2026, 3, 15),
-                story="一起看樱花，吃热干面",
+                visited_at=date(2026, 4, 3),
+                story="",
             ),
             Trip(
                 place="北京",
                 latitude=39.9042,
                 longitude=116.4074,
-                visited_at=date(2026, 4, 20),
-                story="故宫、长城，每一步都是我们的脚印",
+                visited_at=date(2026, 4, 13),
+                story="",
             ),
         ]
         db.add_all(trips)
