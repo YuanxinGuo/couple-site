@@ -35,15 +35,15 @@
 <section class="mb-12">
   <h2 class="text-2xl mb-6 border-b border-sand pb-2">即将到来</h2>
   <div class="space-y-3">
-    {% for anniv in anniversaries %}
+    {% for a in anniversaries %}
     <div class="flex items-center bg-white/50 rounded-xl p-5 shadow-sm">
-      <span class="text-3xl mr-4">{{ anniv.icon }}</span>
+      <span class="text-3xl mr-4">{{ a.obj.icon }}</span>
       <div class="flex-1">
-        <div class="font-bold text-lg">{{ anniv.title }}</div>
-        <div class="text-sm text-ink/60">{{ anniv.date.strftime('%m月%d日') }}</div>
+        <div class="font-bold text-lg">{{ a.obj.title }}</div>
+        <div class="text-sm text-ink/60">{{ a.display_date }}</div>
       </div>
-      <div class="text-rose font-medium text-sm" id="countdown-{{ anniv.id }}"
-           data-date="{{ anniv.date }}"></div>
+      <div class="text-rose font-medium text-sm" id="countdown-{{ a.obj.id }}"
+           data-date="{{ a.obj.date }}" data-recurring="{{ 'true' if a.obj.recurring else 'false' }}"></div>
     </div>
     {% endfor %}
   </div>
@@ -64,11 +64,19 @@
 
   document.querySelectorAll('[data-date]').forEach(function(el) {
     var annivDate = new Date(el.dataset.date + 'T00:00:00');
-    var now = new Date();
-    annivDate.setFullYear(now.getFullYear());
-    if (annivDate < now) annivDate.setFullYear(now.getFullYear() + 1);
-    var diffDays = Math.ceil((annivDate - now) / (1000 * 60 * 60 * 24));
-    el.textContent = diffDays === 1 ? '就是明天！' : '还有 ' + diffDays + ' 天';
+    var recurring = el.dataset.recurring === 'true';
+    function updateHomeCountdown() {
+      var now = new Date();
+      var target = new Date(annivDate);
+      if (recurring) {
+        target.setFullYear(now.getFullYear());
+        if (target < now) target.setFullYear(now.getFullYear() + 1);
+      }
+      var diffDays = Math.ceil((target - now) / (1000 * 60 * 60 * 24));
+      el.textContent = diffDays === 0 ? '就是今天！' : diffDays === 1 ? '就是明天！' : '还有 ' + diffDays + ' 天';
+    }
+    updateHomeCountdown();
+    setInterval(updateHomeCountdown, 60000);
   });
 })();
 </script>

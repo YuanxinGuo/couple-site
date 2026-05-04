@@ -2,35 +2,61 @@
 {% block title %}纪念日{% endblock %}
 {% block content %}
 
-<h1 class="text-3xl font-bold mb-8">纪念日</h1>
+<h1 class="text-3xl font-bold mb-2">纪念日</h1>
+<p class="text-ink/40 text-sm mb-8">每一个重要的日子，都值得被记住</p>
 
 {% if anniversaries %}
-<div class="space-y-4">
-  {% for anniv in anniversaries %}
-  <div class="bg-white/60 rounded-2xl p-6 shadow-sm flex items-start gap-5">
-    <div class="text-4xl flex-shrink-0">{{ anniv.icon }}</div>
-    <div class="flex-1">
-      <div class="flex items-center justify-between mb-1">
-        <h3 class="text-xl font-bold">{{ anniv.title }}</h3>
-        <span class="text-ink/40 text-sm">{{ anniv.date.strftime('%Y年%m月%d日') }}</span>
-      </div>
-      {% if anniv.description %}
-      <p class="text-ink/60 text-sm mb-3">{{ anniv.description }}</p>
-      {% endif %}
-      <div class="flex items-center text-rose font-medium text-sm"
-           data-countdown="{{ anniv.date }}"
-           data-recurring="{{ 'true' if anniv.recurring else 'false' }}">
-        <span class="animate-pulse mr-1">⏳</span>
-        <span class="countdown-text">计算中...</span>
+<div class="timeline">
+  {% for a in anniversaries %}
+  <div class="timeline-item {% if a.is_today %}today{% elif a.is_past %}past{% else %}upcoming{% endif %}">
+    <div class="timeline-card bg-white/60 rounded-2xl p-5 shadow-sm">
+      <div class="flex items-start gap-4">
+        <div class="text-3xl flex-shrink-0 w-10 h-10 flex items-center justify-center">
+          {{ a.obj.icon }}
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between flex-wrap gap-2 mb-1">
+            <h3 class="text-lg font-bold">{{ a.obj.title }}</h3>
+            <span class="text-ink/40 text-sm whitespace-nowrap">
+              {{ a.display_date }}
+              {% if a.obj.recurring %}
+              <span class="text-ink/30 text-xs">· 每年</span>
+              {% endif %}
+            </span>
+          </div>
+
+          {% if a.obj.description %}
+          <p class="text-ink/60 text-sm mb-3">{{ a.obj.description }}</p>
+          {% endif %}
+
+          <div class="flex items-center gap-2">
+            {% if a.is_today %}
+              <span class="timeline-countdown bg-rose/10 text-rose">
+                <span class="animate-pulse">🎉</span> 就是今天！
+              </span>
+            {% elif a.is_past %}
+              <span class="timeline-countdown bg-ink/5 text-ink/40">
+                已过去
+              </span>
+            {% elif a.days_left is not none %}
+              <span class="timeline-countdown bg-rose/10 text-rose"
+                    data-countdown="{{ a.obj.date }}"
+                    data-recurring="{{ 'true' if a.obj.recurring else 'false' }}">
+                <span class="countdown-text">还有 {{ a.days_left }} 天</span>
+              </span>
+            {% endif %}
+          </div>
+        </div>
       </div>
     </div>
   </div>
   {% endfor %}
 </div>
 {% else %}
-<div class="text-center py-20 text-ink/40">
-  <p class="text-5xl mb-4">💝</p>
-  <p>还没有添加纪念日</p>
+<div class="text-center py-24 text-ink/30">
+  <p class="text-6xl mb-6">💝</p>
+  <p class="text-lg">还没有添加纪念日</p>
+  <p class="text-sm mt-2">去后台管理添加你们的重要日子吧</p>
 </div>
 {% endif %}
 
@@ -38,34 +64,46 @@
 
 {% block scripts %}
 <script>
-document.querySelectorAll('[data-countdown]').forEach(function(el) {
-  var annivDate = new Date(el.dataset.countdown + 'T00:00:00');
-  var recurring = el.dataset.recurring === 'true';
-  function update() {
-    var now = new Date();
-    var target = new Date(annivDate);
-    if (recurring) {
-      target.setFullYear(now.getFullYear());
-      if (target < now) target.setFullYear(now.getFullYear() + 1);
+(function() {
+  document.querySelectorAll('[data-countdown]').forEach(function(el) {
+    var dateStr = el.dataset.countdown;
+    var recurring = el.dataset.recurring === 'true';
+    var textEl = el.querySelector('.countdown-text');
+    if (!textEl) return;
+
+    function update() {
+      var now = new Date();
+      var target = new Date(dateStr + 'T00:00:00');
+
+      if (recurring) {
+        target.setFullYear(now.getFullYear());
+        if (target < now) target.setFullYear(now.getFullYear() + 1);
+      }
+
+      var diff = target - now;
+      if (diff <= 0) {
+        textEl.textContent = '就是今天！';
+        return;
+      }
+
+      var days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      var hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      var mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+      if (days > 0) {
+        textEl.textContent = '还有 ' + days + ' 天';
+      } else if (hours > 0) {
+        textEl.textContent = '还有 ' + hours + ' 小时 ' + mins + ' 分';
+      } else if (mins > 0) {
+        textEl.textContent = '还有 ' + mins + ' 分钟';
+      } else {
+        textEl.textContent = '马上就到了！';
+      }
     }
-    var diff = target - now;
-    if (diff < 0) {
-      el.querySelector('.countdown-text').textContent = '已过去';
-      return;
-    }
-    var days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    var hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    var mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    if (days > 0) {
-      el.querySelector('.countdown-text').textContent = '还有 ' + days + ' 天 ' + hours + ' 小时';
-    } else if (hours > 0) {
-      el.querySelector('.countdown-text').textContent = '还有 ' + hours + ' 小时 ' + mins + ' 分钟';
-    } else {
-      el.querySelector('.countdown-text').textContent = '还有 ' + mins + ' 分钟';
-    }
-  }
-  update();
-  setInterval(update, 60000);
-});
+
+    update();
+    setInterval(update, 60000);
+  });
+})();
 </script>
 {% endblock %}

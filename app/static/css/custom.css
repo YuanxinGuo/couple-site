@@ -24,6 +24,118 @@ body {
   animation: fadeIn 0.4s ease-out;
 }
 
+/* 照片墙瀑布流 */
+.gallery-masonry {
+  column-count: 3;
+  column-gap: 1rem;
+}
+
+@media (max-width: 768px) {
+  .gallery-masonry {
+    column-count: 2;
+    column-gap: 0.5rem;
+  }
+}
+
+.gallery-masonry .gallery-item {
+  break-inside: avoid;
+  margin-bottom: 1rem;
+  display: block;
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.75rem;
+}
+
+/* 灯箱导航按钮 */
+.lightbox-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  backdrop-filter: blur(4px);
+  color: white;
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 110;
+  transition: background 0.2s;
+  border: none;
+}
+.lightbox-nav:hover { background: rgba(255,255,255,0.35); }
+.lightbox-nav.prev { left: 16px; }
+.lightbox-nav.next { right: 16px; }
+
+/* 纪念日时间线 */
+.timeline {
+  position: relative;
+  padding-left: 2.5rem;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 1rem;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, #D4807A, #E8DFD3, #D4807A);
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -1.5rem;
+  top: 1.5rem;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #D4807A;
+  border: 2px solid #FAF6F0;
+  z-index: 1;
+}
+
+.timeline-item.upcoming::before {
+  background: #FAF6F0;
+  border: 2px solid #D4807A;
+  box-shadow: 0 0 0 4px rgba(212,128,122,0.2);
+  animation: pulse-dot 2s infinite;
+}
+
+.timeline-item.today::before {
+  background: #D4807A;
+  box-shadow: 0 0 0 4px rgba(212,128,122,0.3);
+  animation: pulse-dot 1.5s infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(212,128,122,0.2); }
+  50% { box-shadow: 0 0 0 8px rgba(212,128,122,0.1); }
+}
+
+.timeline-item.past .timeline-card {
+  opacity: 0.75;
+}
+
+.timeline-countdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
 /* Leaflet 地图容器 */
 #map {
   z-index: 1;

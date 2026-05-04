@@ -2,64 +2,98 @@
 {% block title %}照片墙{% endblock %}
 {% block content %}
 
-<section class="mb-8" x-data="{ activeTag: '全部' }">
-  <h1 class="text-3xl font-bold mb-6">照片墙</h1>
+<section x-data="gallery" class="mb-8">
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-3xl font-bold">照片墙</h1>
+    {% if photos %}
+    <span class="text-ink/40 text-sm">{{ photos|length }} 张回忆</span>
+    {% endif %}
+  </div>
 
   {% if all_tags %}
   <div class="flex flex-wrap gap-2 mb-6">
-    <button @click="activeTag = '全部'"
-            :class="activeTag === '全部' ? 'bg-ink text-cream' : 'bg-white text-ink/60 hover:text-ink'"
-            class="px-4 py-1.5 rounded-full text-sm transition-colors">
+    <button @click="filter('全部')"
+            :class="activeTag === '全部' ? 'bg-ink text-cream' : 'bg-white/60 text-ink/60 hover:text-ink hover:bg-white'"
+            class="px-4 py-1.5 rounded-full text-sm transition-all duration-200">
       全部
     </button>
     {% for tag in all_tags %}
-    <button @click="activeTag = '{{ tag }}'"
-            :class="activeTag === '{{ tag }}' ? 'bg-ink text-cream' : 'bg-white text-ink/60 hover:text-ink'"
-            class="px-4 py-1.5 rounded-full text-sm transition-colors">
+    <button @click="filter('{{ tag }}')"
+            :class="activeTag === '{{ tag }}' ? 'bg-ink text-cream' : 'bg-white/60 text-ink/60 hover:text-ink hover:bg-white'"
+            class="px-4 py-1.5 rounded-full text-sm transition-all duration-200">
       {{ tag }}
     </button>
     {% endfor %}
   </div>
   {% endif %}
 
-  <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+  {% if photos %}
+  <div class="gallery-masonry" id="gallery-grid">
     {% for photo in photos %}
-    <div class="photo-item" data-tags="{{ photo.tags|join(',') }}">
-      <div class="relative overflow-hidden rounded-xl group cursor-pointer"
-           @click="$dispatch('open-lightbox', {url: '{{ photo.url }}', caption: '{{ photo.caption }}'})">
-        <img src="{{ photo.thumb_url }}" alt="{{ photo.caption }}" loading="lazy"
-             class="w-full h-64 object-cover transition duration-300 group-hover:scale-105">
-        <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/40 to-transparent p-3">
-          {% if photo.caption %}
-          <p class="text-white text-sm">{{ photo.caption }}</p>
-          {% endif %}
-          {% if photo.taken_at %}
-          <p class="text-white/70 text-xs">{{ photo.taken_at.strftime('%Y.%m.%d') }}</p>
-          {% endif %}
-        </div>
+    <a href="{{ photo.url }}"
+       data-pswp-width="1600"
+       data-pswp-height="1200"
+       data-tags="{{ photo.tags|join(',') }}"
+       class="gallery-item group"
+       @click.prevent="openLightbox({{ loop.index0 }})">
+      <img src="{{ photo.thumb_url }}" alt="{{ photo.caption }}" loading="lazy"
+           class="w-full h-auto transition duration-500 group-hover:scale-105">
+      <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
+        {% if photo.caption %}
+        <p class="text-white text-sm font-medium">{{ photo.caption }}</p>
+        {% endif %}
+        {% if photo.taken_at %}
+        <p class="text-white/70 text-xs mt-1">{{ photo.taken_at.strftime('%Y.%m.%d') }}</p>
+        {% endif %}
+        {% if photo.location %}
+        <p class="text-white/60 text-xs">📍 {{ photo.location }}</p>
+        {% endif %}
       </div>
-    </div>
+    </a>
     {% endfor %}
-    {% if not photos %}
-    <div class="col-span-full text-center py-20 text-ink/40">
-      <p class="text-5xl mb-4">📷</p>
-      <p>还没有照片，快去上传第一张回忆吧</p>
-    </div>
-    {% endif %}
   </div>
 
-  <!-- Lightbox -->
-  <div x-data="{ open: false, url: '', caption: '' }"
-       @open-lightbox.window="open = true; url = $event.detail.url; caption = $event.detail.caption"
-       x-show="open"
-       x-transition
-       class="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center"
-       @click.self="open = false">
-    <button @click="open = false"
-            class="absolute top-4 right-4 text-white/70 hover:text-white text-3xl leading-none z-10">&times;</button>
-    <img :src="url" :alt="caption" class="max-w-[95vw] max-h-[90vh] object-contain rounded-lg shadow-2xl">
-    <p x-show="caption" x-text="caption" class="absolute bottom-6 text-white/80 text-sm"></p>
+  <!-- PhotoSwipe Lightbox -->
+  <div x-show="lightboxOpen"
+       x-transition.opacity.duration.300ms
+       class="fixed inset-0 z-[9999] bg-black/95 flex items-center justify-center"
+       @click.self="closeLightbox()"
+       @keydown.escape.window="closeLightbox()"
+       @keydown.left.window.prevent="prevImage()"
+       @keydown.right.window.prevent="nextImage()"
+       x-trap="lightboxOpen">
+
+    <button @click="closeLightbox()"
+            class="absolute top-4 right-4 text-white/60 hover:text-white text-4xl leading-none z-50 w-12 h-12 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors">
+      &times;
+    </button>
+
+    <button @click="prevImage()" x-show="images.length > 1"
+            class="lightbox-nav prev">&larr;</button>
+    <button @click="nextImage()" x-show="images.length > 1"
+            class="lightbox-nav next">&rarr;</button>
+
+    <img :src="currentImage().url"
+         :alt="currentImage().caption"
+         class="max-w-[95vw] max-h-[85vh] object-contain select-none rounded-lg shadow-2xl"
+         @swipe-left.window="nextImage()"
+         @swipe-right.window="prevImage()">
+
+    <div x-show="currentImage().caption || currentImage().index !== undefined"
+         class="absolute bottom-6 left-0 right-0 text-center">
+      <p x-show="currentImage().caption" x-text="currentImage().caption"
+         class="text-white/90 text-sm mb-1 font-serif"></p>
+      <p class="text-white/40 text-xs" x-text="indexText()"></p>
+    </div>
   </div>
+
+  {% else %}
+  <div class="text-center py-24 text-ink/30">
+    <p class="text-6xl mb-6">📷</p>
+    <p class="text-lg">还没有照片</p>
+    <p class="text-sm mt-2">去后台管理上传你们的第一张回忆吧</p>
+  </div>
+  {% endif %}
 </section>
 
 {% endblock %}
@@ -67,26 +101,66 @@
 {% block scripts %}
 <script>
 document.addEventListener('alpine:init', () => {
-  document.querySelectorAll('.photo-item').forEach(item => {
-    item._tags = item.dataset.tags ? item.dataset.tags.split(',') : [];
-  });
-});
+  Alpine.data('gallery', () => ({
+    activeTag: '全部',
+    lightboxOpen: false,
+    currentIndex: 0,
+    images: [],
 
-document.addEventListener('click', (e) => {
-  if (e.target.matches('[x-text*="tag"]') || e.target.closest('[x-data] button')) {
-    setTimeout(() => {
-      const activeEl = document.querySelector('[x-data]');
-      if (!activeEl || !activeEl.__x) return;
-      const activeTag = activeEl.__x.$data.activeTag;
-      document.querySelectorAll('.photo-item').forEach(item => {
-        if (activeTag === '全部') {
+    init() {
+      const items = document.querySelectorAll('#gallery-grid .gallery-item');
+      this.images = Array.from(items).map((el, i) => ({
+        url: el.getAttribute('href'),
+        caption: el.querySelector('img')?.getAttribute('alt') || '',
+        tags: el.dataset.tags ? el.dataset.tags.split(',') : [],
+        index: i,
+      }));
+    },
+
+    filter(tag) {
+      this.activeTag = tag;
+      document.querySelectorAll('#gallery-grid .gallery-item').forEach((item, i) => {
+        if (tag === '全部') {
           item.style.display = '';
+          this.images[i].visible = true;
         } else {
-          item.style.display = item._tags.includes(activeTag) ? '' : 'none';
+          const tags = item.dataset.tags ? item.dataset.tags.split(',') : [];
+          const visible = tags.includes(tag);
+          item.style.display = visible ? '' : 'none';
+          this.images[i].visible = visible;
         }
       });
-    }, 50);
-  }
+    },
+
+    openLightbox(index) {
+      this.currentIndex = index;
+      this.lightboxOpen = true;
+      document.body.style.overflow = 'hidden';
+    },
+
+    closeLightbox() {
+      this.lightboxOpen = false;
+      document.body.style.overflow = '';
+    },
+
+    currentImage() {
+      return this.images[this.currentIndex] || {};
+    },
+
+    prevImage() {
+      this.currentIndex = (this.currentIndex - 1 + this.images.length) % this.images.length;
+    },
+
+    nextImage() {
+      this.currentIndex = (this.currentIndex + 1) % this.images.length;
+    },
+
+    indexText() {
+      const visible = this.images.filter(img => img.visible !== false);
+      if (visible.length <= 1) return '';
+      return `${this.currentIndex + 1} / ${this.images.length}`;
+    },
+  }));
 });
 </script>
 {% endblock %}

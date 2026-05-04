@@ -103,21 +103,34 @@
 <!-- 管理足迹 -->
 <section class="mb-12 bg-white/60 rounded-2xl p-6 shadow-sm">
   <h2 class="text-xl font-bold mb-4">添加足迹</h2>
-  <form action="/api/trips" method="post" class="space-y-4">
+  <form action="/api/trips" method="post" class="space-y-4" x-data="tripForm">
+    <div>
+      <label class="block text-sm text-ink/60 mb-1">搜索地点（输入地名自动填经纬度）</label>
+      <div class="flex gap-2">
+        <input type="text" x-model="searchQuery" @keydown.enter.prevent="searchPlace()"
+               placeholder="输入地名搜索，如：北京故宫、东京塔、巴黎铁塔"
+               class="flex-1 px-4 py-3 rounded-xl bg-white border border-sand focus:border-rose outline-none">
+        <button type="button" @click="searchPlace()"
+                :disabled="searching"
+                class="px-6 py-3 rounded-xl bg-ink text-cream font-medium hover:bg-ink/90 transition-colors disabled:opacity-50 whitespace-nowrap"
+                x-text="searching ? '搜索中...' : '搜索'"></button>
+      </div>
+      <p x-show="searchResult" x-text="searchResult" class="text-sm mt-1" :class="searchError ? 'text-red-400' : 'text-green-500'"></p>
+    </div>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div>
         <label class="block text-sm text-ink/60 mb-1">地点名</label>
-        <input type="text" name="place" required placeholder="北京·故宫"
+        <input type="text" name="place" required placeholder="北京·故宫" x-model="placeName"
                class="w-full px-4 py-3 rounded-xl bg-white border border-sand focus:border-rose outline-none">
       </div>
       <div>
         <label class="block text-sm text-ink/60 mb-1">纬度</label>
-        <input type="number" step="any" name="latitude" required placeholder="39.9042"
+        <input type="number" step="any" name="latitude" required placeholder="39.9042" x-model="latitude"
                class="w-full px-4 py-3 rounded-xl bg-white border border-sand focus:border-rose outline-none">
       </div>
       <div>
         <label class="block text-sm text-ink/60 mb-1">经度</label>
-        <input type="number" step="any" name="longitude" required placeholder="116.4074"
+        <input type="number" step="any" name="longitude" required placeholder="116.4074" x-model="longitude"
                class="w-full px-4 py-3 rounded-xl bg-white border border-sand focus:border-rose outline-none">
       </div>
     </div>
@@ -183,5 +196,44 @@ async function deletePhoto(id, btn) {
     btn.closest('.relative').remove();
   }
 }
+
+document.addEventListener('alpine:init', () => {
+  Alpine.data('tripForm', () => ({
+    searchQuery: '',
+    searching: false,
+    searchResult: '',
+    searchError: false,
+    placeName: '',
+    latitude: '',
+    longitude: '',
+
+    async searchPlace() {
+      if (!this.searchQuery.trim()) return;
+      this.searching = true;
+      this.searchResult = '';
+      this.searchError = false;
+      try {
+        var resp = await fetch(
+          'https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' +
+          encodeURIComponent(this.searchQuery)
+        );
+        var data = await resp.json();
+        if (data.length > 0) {
+          this.latitude = data[0].lat;
+          this.longitude = data[0].lon;
+          this.placeName = this.placeName || data[0].display_name.split(',')[0];
+          this.searchResult = '已找到：' + data[0].display_name;
+        } else {
+          this.searchResult = '未找到，请换一个关键词试试';
+          this.searchError = true;
+        }
+      } catch (e) {
+        this.searchResult = '搜索失败，请检查网络';
+        this.searchError = true;
+      }
+      this.searching = false;
+    },
+  }));
+});
 </script>
 {% endblock %}
