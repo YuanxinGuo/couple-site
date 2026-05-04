@@ -11,11 +11,10 @@
 <p class="text-ink/40 text-sm mb-8">记录我们的小日常</p>
 
 {% if entries %}
-<div class="space-y-6">
+<div class="space-y-6" id="diary-list">
   {% for entry in entries %}
-  <article class="bg-white/60 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow duration-300"
-           x-data="{ expanded: false, rendered: false, html: '' }"
-           x-init="html = marked.parse($el.querySelector('.entry-raw').textContent)">
+  <article class="bg-white/60 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow duration-300 diary-entry"
+           data-raw="{{ entry.content | e }}">
     <div class="flex items-center justify-between mb-3">
       <div class="flex items-center gap-3">
         <span class="text-2xl">
@@ -29,19 +28,19 @@
       <span class="text-ink/30 text-sm whitespace-nowrap">{{ entry.created_at.strftime('%Y.%m.%d %H:%M') }}</span>
     </div>
 
-    <div class="relative">
-      <div class="text-ink/70 leading-relaxed entry-rendered"
-           :class="expanded ? '' : 'line-clamp-4'"
-           x-html="html"></div>
-      <div class="hidden entry-raw">{{ entry.content }}</div>
-      <div class="flex items-center gap-4 mt-2">
-        {% if entry.content|length > 150 %}
-        <button @click="expanded = !expanded"
-                class="text-rose text-sm hover:underline cursor-pointer"
-                x-text="expanded ? '收起' : '展开全文'"></button>
-        {% endif %}
+    <div class="diary-body">
+      <div class="diary-preview text-ink/70 leading-relaxed whitespace-pre-wrap line-clamp-4">
+        {{ entry.content[:200] }}{% if entry.content|length > 200 %}...{% endif %}
       </div>
+      <div class="diary-full hidden text-ink/70 leading-relaxed entry-rendered"></div>
     </div>
+
+    {% if entry.content|length > 200 %}
+    <button onclick="toggleDiary(this)"
+            class="mt-2 text-rose text-sm hover:underline cursor-pointer">
+      展开全文
+    </button>
+    {% endif %}
   </article>
   {% endfor %}
 </div>
@@ -61,6 +60,27 @@
 
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+function toggleDiary(btn) {
+  var article = btn.closest('.diary-entry');
+  var preview = article.querySelector('.diary-preview');
+  var full = article.querySelector('.diary-full');
+  var raw = article.dataset.raw;
+
+  if (full.classList.contains('hidden')) {
+    if (!full.innerHTML) {
+      full.innerHTML = marked.parse(raw);
+    }
+    preview.classList.add('hidden');
+    full.classList.remove('hidden');
+    btn.textContent = '收起';
+  } else {
+    preview.classList.remove('hidden');
+    full.classList.add('hidden');
+    btn.textContent = '展开全文';
+  }
+}
+</script>
 <style>
 .line-clamp-4 {
   display: -webkit-box;

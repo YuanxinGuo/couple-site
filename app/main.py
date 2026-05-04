@@ -7,14 +7,20 @@ from starlette.middleware.sessions import SessionMiddleware
 from contextlib import asynccontextmanager
 
 from app.config import settings
-from app.database import init_db
+from app.database import init_db, SessionLocal
 from app.routers import pages, photos, anniversaries, trips, diary, auth
+from app.seed import seed
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     os.makedirs("data", exist_ok=True)
     init_db()
+    db = SessionLocal()
+    try:
+        seed(db, settings.relationship_start_date)
+    finally:
+        db.close()
     yield
 
 
