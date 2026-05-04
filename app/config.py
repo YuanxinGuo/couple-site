@@ -1,21 +1,18 @@
-from pydantic_settings import BaseSettings
+import os
 from datetime import date
 
 
-class Settings(BaseSettings):
-    model_config = {"env_file": ".env", "env_file_encoding": "utf-8", "extra": "ignore"}
-
-    secret_key: str
-    site_password: str
-    relationship_start_date: date
-    database_url: str = "sqlite:///./data/couple.db"
-
-    cloudinary_cloud_name: str = ""
-    cloudinary_api_key: str = ""
-    cloudinary_api_secret: str = ""
-
-    site_title: str = "我们的小窝"
-    site_description: str = "记录我们的每一天"
+class Settings:
+    def __init__(self):
+        self.secret_key = os.environ["SECRET_KEY"]
+        self.site_password = os.environ["SITE_PASSWORD"]
+        self.relationship_start_date = date.fromisoformat(os.environ["RELATIONSHIP_START_DATE"])
+        self.database_url = os.environ.get("DATABASE_URL", "sqlite:///./data/couple.db")
+        self.cloudinary_cloud_name = os.environ.get("CLOUDINARY_CLOUD_NAME", "")
+        self.cloudinary_api_key = os.environ.get("CLOUDINARY_API_KEY", "")
+        self.cloudinary_api_secret = os.environ.get("CLOUDINARY_API_SECRET", "")
+        self.site_title = os.environ.get("SITE_TITLE", "我们的小窝")
+        self.site_description = os.environ.get("SITE_DESCRIPTION", "记录我们的每一天")
 
 
 settings = Settings()
